@@ -95,15 +95,6 @@ local config = {
         "rcasia/neotest-java",
       },
     },
-    {
-      "ryanmsnyder/toggleterm-manager.nvim",
-      dependencies = {
-        "akinsho/nvim-toggleterm.lua",
-        "nvim-telescope/telescope.nvim",
-        "nvim-lua/plenary.nvim", 
-      },
-      config = true,
-    },
     { 
       "kdheepak/lazygit.nvim",
       dependencies = {
@@ -130,26 +121,12 @@ local config = {
           local directions = require('hop.hint').HintDirection
           local hop = require('hop')
           map('n', 'f', '<cmd>HopWordCurrentLine<cr>', opts)
-          map('n', 'F', '<cmd>HopAnywhereMW<cr>', opts)
+          map('n', 'F', '<cmd>HopChar2<cr>', opts)
         end
     },
     {
-      "tzachar/cmp-tabnine",
-      requires = "hrsh7th/nvim-cmp",
-      run = "./install.sh",
-      config = function()
-        local tabnine = require "cmp_tabnine.config"
-        tabnine:setup {
-          max_lines = 1000,
-          max_num_results = 20,
-          sort = true,
-          run_on_every_keystroke = true,
-          snippet_placeholder = "..",
-          ignored_file_types = {},
-          show_prediction_strength = false,
-        }
-        astronvim.add_cmp_source({name = "cmp_tabnine", priority = 1000, max_item_count = 7})
-      end,
+      'tpope/vim-fugitive',
+      lazy = false,
     },
   },
   polish = function()
@@ -178,8 +155,6 @@ local config = {
 
     vim.api.nvim_set_keymap(
       'n', '<Leader>gg', ':LazyGit<CR>', {noremap = true, silent = true})
-    vim.api.nvim_set_keymap(
-      'n', '<Leader>tm', ':Telescope toggleterm_manager<CR>', {noremap = true, silent = true})
     vim.api.nvim_set_keymap(
       'n', 
       '<Leader>k', 
@@ -223,23 +198,82 @@ local config = {
       },
     } 
     require "lsp_signature".setup(cfg)
-    require("toggleterm-manager").setup {}
-    -- dofile('C:\\Users\\Ivan\\Learnign\\Nvim\\code-sherpa.nvim\\code-sherpa.lua')
     
-    -- local lsp_attach_group = vim.api.nvim_create_augroup("LspAttach_inlayhints", { clear  = true })
-    -- vim.api.nvim_create_autocmd("LspAttach", {
-    --   group = lsp_attach_group,
-    --   callback = function(args)
-    --     if not (args.data and args.data.client_id) then
-    --       return
-    --     end
-    --
-    --     local bufnr = args.buf
-    --     local client = vim.lsp.get_client_by_id(args.data.client_id)
-    --     require("lsp-inlayhints").on_attach(client, bufnr)
-    --   end,
-    -- }) 
-    -- vim.g.gruvbox_material_background = 'soft'
+    -- LuaSnippets
+    local ls = require("luasnip")
+    local s = ls.snippet
+    local sn = ls.snippet_node
+    local isn = ls.indent_snippet_node
+    local t = ls.text_node
+    local i = ls.insert_node
+    local f = ls.function_node
+    local c = ls.choice_node
+    local d = ls.dynamic_node
+    
+    -- Reusable parts
+    local vis = { t("pub "), i(1), t(" "), i(2) }
+    local ret = { t(" -> "), i(1), t(" ") }
+    local block = { t("{\n"), i(0), t("\n}") }
+    -- Snippets
+    ls.add_snippets("rust", {
+        s('if', {
+          t { 'if ' },
+          i(1, 'expr'),
+          t { ' {', '\t' },
+          i(0),
+          t { '', '}' },
+        }),
+
+        s('else', {
+          t { 'else {', '\t' },
+          i(0),
+          t { '', '}' },
+        }),
+
+        s({ trig = 'match', dscr = '`match` with two matching arms.' }, {
+          t { 'match ' },
+          i(1, 'expr'),
+          t { ' {', '\t' },
+          i(2, 'Some(expr)'),
+          t { ' => ' },
+          i(3, 'expr'),
+          t { ',', '\t' },
+          i(4, 'None'),
+          t { ' => ' },
+          i(4, 'expr'),
+          t { ',', '' },
+          t { '}' },
+        }),
+        -- test: Test function
+        s('testmod', {
+          t { '#[cfg(test)]', '' },
+          t { 'mod ' },
+          i(1, 'mod_test'),
+          t { ' {', '\t' },
+          t { 'use super::*;', '\t' },
+          t { '', '\t' },
+          t { '#[test]', '\t' },
+          t { 'fn ' },
+          i(2, 'test'),
+          t { '() {', '\t\t' },
+          t { 'assert!(' },
+          i(0, 'bool'),
+          t { ');', '\t' },
+          t { '}', '' },
+          t { '}' },
+        }),
+        s('test', {
+          t { '#[test]', '' },
+          t { 'fn ' },
+          i(1, 'test'),
+          t { '() {', '\t' },
+          t { 'assert!(' },
+          i(0, 'bool'),
+          t { ');', '' },
+          t { '}' },
+        }),
+
+    })
   end,
 }
 
